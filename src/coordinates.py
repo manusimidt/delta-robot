@@ -98,7 +98,7 @@ def ta(angle):
     return actual_angle
 
 
-def ca(x: float, y: float, z: float):
+def ik(x: float, y: float, z: float)->tuple:
     # inverse kinematics
     a = W_B - U_P
     b = (S_P/2) - (sqrt(3)/2) * W_B
@@ -139,40 +139,54 @@ def ca(x: float, y: float, z: float):
     theta3 = theta31 if -60 < theta31 < 90 else theta32
     return theta1, theta2, theta3
 
-def move_to(x,y,z):
-    theta1, theta2, theta3 = ca(x, y, z)
-    servos[0].angle = ta(theta1)
-    servos[1].angle = ta(theta2)
-    servos[2].angle = ta(theta3)
+
+
+def fk(theta1, theta2, theta3)->tuple:
+    # forward kinematics
+    pass
+    
+def move_to(x:float, y:float, z:float, speed:float = 0.1):
+    """moves from current position to another position at a CONSTANT speed
+    Args:
+        x (float): x pos
+        y (float): y pos
+        z (float): z pos
+        speed (float): the maximum speed in degree/second
+    """
+
+    theta11, theta21, theta31 = servos[0].angle, servos[1].angle, servos[2].angle
+    theta12, theta22, theta32 = ik(x, y, z)
+    theta12, theta22, theta32 = ta(theta12), ta(theta22), ta(theta32)
+    
+    delta1, delta2, delta3 = theta12-theta11, theta22-theta21, theta32-theta31
+    # figure how much time the robot should need for the movement
+    max_delta = max([abs(delta1), abs(delta2), abs(delta3)])
+    max_speed = speed * 10**-3 # speed in ° per ms
+    
+    time_steps = max_delta / max_speed
+    
+    theta1_inc, theta2_inc, theta3_inc = delta1/time_steps, delta2/time_steps, delta3/time_steps
+    
+    for i in range(int(time_steps)):
+        # sleep one ms
+        time.sleep(1e-3)
+        servos[0].fraction = theta1_inc
+        servos[1].fraction = theta2_inc
+        servos[2].fraction = theta3_inc
+    
+    
 
 if __name__ == "__main__":
     print("Starting initialization...")
 
-    print("0, 0, 250 ", ca(0,0,250))
+    print("0, 0, 250 ", ik(0,0,250))
     
     servos = setup_servos()
     # calibrate_servos(servos)
     
-    move_to(-30, 0, 100)
-    for b in range(5):
-        for i in range(30):
-            move_to(-30+i, 0, 100+i*2)
-            time.sleep(0.01)
-            
-        for i in range(30):
-            move_to(0+i, 0, 160-i*2)
-            time.sleep(0.01)
-        
-        for i in range(30):
-            move_to(30-i, 0, 100+i*2)
-            time.sleep(0.01)
-                
-        for i in range(30):
-            move_to(0-i, 0, 160-i*2)
-            time.sleep(0.01)    
-        
-    move_to(0, 0, 100)
+    move_to(0,0,200)
     exit()
+    
     for i in range(100):
         coordinate_str: str = input("Please enter coordinates: ").strip()
         if len(coordinate_str.split(' ')) != 3:
@@ -181,7 +195,7 @@ if __name__ == "__main__":
         
         x, y, z = coordinate_str.split(' ')
         x, y, z = int(x), int(y), int(z)
-        theta1, theta2, theta3 = ca(x, y, z)
+        theta1, theta2, theta3 = ik(x, y, z)
         
         print(f"Moving to position {coordinate_str}, calculated angles: {theta1} {theta2} {theta3}")
         
