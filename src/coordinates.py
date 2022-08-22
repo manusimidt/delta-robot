@@ -6,6 +6,7 @@ from adafruit_motor import servo
 from adafruit_pca9685 import PCA9685
 from math import sqrt, atan, degrees
 import numpy as np
+from kinematics import delta_calcInverse, delta_calcForward
 
 min_pulses = [500, 500, 500]
 max_pulses = [2830, 2789, 2730]
@@ -179,13 +180,13 @@ def move_to(x:float, y:float, z:float, speed:float = 0.1):
 if __name__ == "__main__":
     print("Starting initialization...")
 
-    print("0, 0, 250 ", ik(0,0,250))
+    print("0, 0, 250 ", ik(0,0,-250))
     
     servos = setup_servos()
     # calibrate_servos(servos)
     
-    move_to(0,0,200)
-    exit()
+    # move_to(0,0,200)
+
     
     for i in range(100):
         coordinate_str: str = input("Please enter coordinates: ").strip()
@@ -195,10 +196,17 @@ if __name__ == "__main__":
         
         x, y, z = coordinate_str.split(' ')
         x, y, z = int(x), int(y), int(z)
-        theta1, theta2, theta3 = ik(x, y, z)
-        
+        status, (theta1, theta2, theta3) = delta_calcInverse(x, y, z)
+        if status != 0: 
+            print(f"Invalid coordinates!")
+            continue
         print(f"Moving to position {coordinate_str}, calculated angles: {theta1} {theta2} {theta3}")
         
         servos[0].angle = ta(theta1)
         servos[1].angle = ta(theta2)
         servos[2].angle = ta(theta3)
+
+        time.sleep(1)
+        status, (x, y, z) = delta_calcForward(servos[0].angle, servos[1].angle, servos[2].angle)
+        if status != 0: print("Impossible error")
+        print(f"Measured position {x} {y} {z}")
