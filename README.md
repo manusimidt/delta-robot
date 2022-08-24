@@ -9,4 +9,4 @@ The end-result will look something like this:
 ![3D model](/img/delta-robot-animation.gif)
 
 A mounting and the upper arms are still missing, but at least it already moves approximately to the preset X, Y, Z positions.
-![robot](/img/delta-robot.gif)
+![robot](/img/IMG_3955.mp4)
