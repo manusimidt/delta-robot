@@ -192,22 +192,25 @@ if __name__ == "__main__":
     status, (x, y, z) = delta_calcForward(t_actual_ref(servos[0].angle), t_actual_ref(servos[1].angle), t_actual_ref(servos[2].angle))
     if status != 0: print("Impossible error")
     print(f"Measured position {x} {y} {z}") 
-
+    coordinates = [
+        [   0,  0, -260],
+        [  80,  0, -260],
+        [   0,  0, -260],
+        [ -80,  0, -260],
+        [   0,  0, -260],
+        [   0,-80, -260],
+        [   0,  0, -260],
+        [   0, 80, -260],
+        [   0,  0, -260],
+        [   0,  0, -150],
+    ]
     
     
-    for i in range(100):
-        coordinate_str: str = input("Please enter coordinates: ").strip()
-        if len(coordinate_str.split(' ')) != 3:
-            continue
-        
-        
-        x, y, z = coordinate_str.split(' ')
-        x, y, z = int(x), int(y), int(z)
+    for coords in coordinates:
+       
+        x, y, z = coords
         status, (theta1, theta2, theta3) = delta_calcInverse(x, y, z)
-        if status != 0: 
-            print(f"Invalid coordinates!")
-            continue
-        print(f"Moving to position {coordinate_str}, calculated angles: {theta1} {theta2} {theta3}")
+        print(f"Moving to position {coords}, calculated angles: {theta1} {theta2} {theta3}")
         
         servos[0].angle = t_ref_actual(theta1)
         servos[1].angle = t_ref_actual(theta2)
